@@ -21,5 +21,6 @@
 #define BOOMGATE_OPENED_TIME (20)
 
 #define TEMP_CHECK_TIME (2)
+#define VACUATE_TIMER (20)
 
 #endif
