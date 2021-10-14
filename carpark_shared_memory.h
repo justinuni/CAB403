@@ -6,10 +6,11 @@
 #define INIT_SHARED_MEMORY
 
 int get_sizeof_carpark();
-void *init_shared_memory();
-void *get_shared_memory();
-entrance_t *get_entrance(void *shm, int entrance);
-exit_t *get_exit(void *shm, int exit);
-level_t *get_level(void *shm, int level);
+int init_shared_memory(void **output);
+int close_shared_memory(void *shm);
+int get_shared_memory(void **output);
+int get_entrance(void *shm, int entrance, entrance_t **output);
+int get_exit(void *shm, int exit,exit_t **output);
+int get_level(void *shm, int level, level_t **output);
 
 #endif

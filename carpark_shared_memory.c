@@ -17,11 +17,11 @@ int get_sizeof_carpark()
 }
 
 // Initilize our shared memory space for this run
-// If successful returns a void pointer to the memory space
-// Returns 1's if fails
-void *init_shared_memory()
+// Input: A void pointer output
+// Output: Return status colde and modified output with shm pointer
+int init_shared_memory(void **output)
 {
-	// Make sure to unlike the space if it previously has existed
+	// Make sure to unlink the space if it previously has existed
 	shm_unlink(KEY);
 
 	int shm_fd;
@@ -37,22 +37,22 @@ void *init_shared_memory()
 		perror("Failed to set shared memory size");
 		return 1;
 	}
-
 	if ((shm = mmap(0, get_sizeof_carpark(), PROT_READ| PROT_WRITE, MAP_SHARED, shm_fd, 0)) == (char *)-1)
 	{
 		perror("Failed to map memory space");
 		return 1;
 	}
 
-	return shm;
+	*output = shm;
+	return 0;
 }
 
 // Closes the shared memory space
-// Returns 0 on success
-// Returns 1 on failure
+// Input: SHM void pointer
+// Output: Status code
 int close_shared_memory(void *shm)
 {
-	if (munmap(shm, KEY) != 0)
+	if (munmap(shm, get_sizeof_carpark()) != 0)
 	{
 		perror("Failed to unmap shared memory");
 		return 1;
@@ -68,8 +68,9 @@ int close_shared_memory(void *shm)
 }
 
 // Returns a void pointer of the shared memory space
-// Returns 1 on failure
-void *get_shared_memory()
+// Input: A void pointer output
+// Output: Return status code and modified output with shm pointer
+int get_shared_memory(void **output)
 {
 	int shm_fd;
 	void *shm;
@@ -86,12 +87,14 @@ void *get_shared_memory()
 		return 1;
 	}
 
-	return shm;
+	*output = shm;
+	return 0;
 }
 
 // Return a entrance_t pointer to the entrance number provided in the shared memory space
-// Returns 1 if failure
-entrance_t *get_entrance(void *shm, int entrance)
+// Input: Void pointer shm, entrance number, entrance_t pointer output
+// Output: Return status code and modified entrance_t output if successful
+int get_entrance(void *shm, int entrance, entrance_t **output)
 {
 	// Make sure we are accessing a valid entrance
 	if (entrance >= ENTRANCES || entrance < 0)
@@ -103,13 +106,14 @@ entrance_t *get_entrance(void *shm, int entrance)
 	}
 	// Calculate the position of our pointer
 	entrance_t *entrance_pointer = shm + (entrance * sizeof(entrance_t));
-
-	return entrance_pointer;
+	*output = entrance_pointer;
+	return 0;
 }
 
 // Return a exit_t pointer to the exit number provided in the shared memory space
-// Returns 1 if failure
-exit_t *get_exit(void *shm, int exit)
+// Input: Void pointer shm, entrance number, exit_t pointer output
+// Output: Return status code and modified exit_T output if successful
+int get_exit(void *shm, int exit, exit_t **output)
 {
 	// Make sure we are accessing a valid exit
 	if (exit >= ENTRANCES || exit < 0)
@@ -121,13 +125,14 @@ exit_t *get_exit(void *shm, int exit)
 	}
 	// Calculate the position of our pointer
 	exit_t *exit_pointer = shm + (ENTRANCES * sizeof(entrance_t)) + (exit * sizeof(exit_t));
-
-	return exit_pointer;
+	*output = exit_pointer;
+	return 0;
 }
 
 // Return a level_t pointer to the level number provided in the shared memory space
-// Returns 1 if failure
-level_t *get_level(void *shm, int level)
+// Input: Void pointer shm, entrance number, level_t pointer output
+// Output: Return status code and modified level_t output if successful
+int get_level(void *shm, int level, level_t **output)
 {
 	// Make sure we are accessing a valid level
 	if (level >= LEVELS || level < 0)
@@ -139,6 +144,6 @@ level_t *get_level(void *shm, int level)
 	}
 	// Calculate the position of our pointer
 	level_t *level_pointer = shm + (ENTRANCES * sizeof(entrance_t)) + (EXITS * sizeof(exit_t)) + (level * sizeof(level_t));
-
-	return level_pointer;
+	*output = level_pointer;
+	return 0;
 }
