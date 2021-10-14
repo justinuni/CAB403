@@ -147,3 +147,34 @@ int get_level(void *shm, int level, level_t **output)
 	*output = level_pointer;
 	return 0;
 }
+
+void init_pthread_vars(void *shm)
+{
+	entrance_t *entrance;
+	for (size_t i = 0; i < ENTRANCES; i++)
+	{
+		get_entrance(shm, i, &entrance);
+		pthread_mutex_init(&entrance->lpr.lock, NULL);
+		pthread_cond_init(&entrance->lpr.condition, NULL);
+		pthread_mutex_init(&entrance->boomgate.lock, NULL);
+		pthread_cond_init(&entrance->boomgate.condition, NULL);
+	}
+
+	exit_t *exit;
+	for (size_t i = 0; i < EXITS; i++)
+	{
+		get_exit(shm, i, &exit);
+		pthread_mutex_init(&exit->lpr.lock, NULL);
+		pthread_cond_init(&exit->lpr.condition, NULL);
+		pthread_mutex_init(&exit->boomgate.lock, NULL);
+		pthread_cond_init(&exit->boomgate.condition, NULL);
+	}
+
+	level_t *level;
+	for (size_t i = 0; i < LEVELS; i++)
+	{
+		get_level(shm, i, &level);
+		pthread_mutex_init(&level->lpr.lock, NULL);
+		pthread_cond_init(&level->lpr.condition, NULL);
+	}	
+}

@@ -12,5 +12,7 @@ int get_shared_memory(void **output);
 int get_entrance(void *shm, int entrance, entrance_t **output);
 int get_exit(void *shm, int exit,exit_t **output);
 int get_level(void *shm, int level, level_t **output);
+void init_pthread_vars(void *shm);
+
 
 #endif
