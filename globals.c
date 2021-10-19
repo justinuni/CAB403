@@ -4,13 +4,13 @@
 
 #include "globals.h"
 
-pthread_mutex_t rand_lock = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t g_rand_lock = PTHREAD_MUTEX_INITIALIZER;
 
 int rand_num()
 {
-    pthread_mutex_lock(&rand_lock);
+    pthread_mutex_lock(&g_rand_lock);
     int val = rand();
-    pthread_mutex_unlock(&rand_lock);
+    pthread_mutex_unlock(&g_rand_lock);
 
     return val;
 }
