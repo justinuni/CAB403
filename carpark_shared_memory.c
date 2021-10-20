@@ -149,6 +149,8 @@ int get_level(void *shm, int level, level_t **output)
 	return 0;
 }
 
+// Function will intialize the various values in the shm space to their expected default state
+// Input: Void pointer shm
 void init_shm_vars(void *shm)
 {
 	entrance_t *entrance;
