@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
 
@@ -6,6 +5,7 @@
 
 pthread_mutex_t g_rand_lock = PTHREAD_MUTEX_INITIALIZER;
 
+// Function will generate a random number using rand but is thread safe
 int rand_num()
 {
     pthread_mutex_lock(&g_rand_lock);

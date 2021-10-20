@@ -5,6 +5,7 @@
 #ifndef CARPARK_GLOBALS
 #define CARPARK_GLOBALS
 
+// global mutex for using the rand function
 extern pthread_mutex_t g_rand_lock;
 
 int rand_num();
