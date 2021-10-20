@@ -12,7 +12,7 @@
 #define KEY ("PARKING")
 
 // Helper function for return total size of carpark
-int get_sizeof_carpark()
+static int get_sizeof_carpark()
 {
 	return sizeof(entrance_t) *  ENTRANCES + sizeof(exit_t) * EXITS + sizeof(level_t) * LEVELS;
 }
