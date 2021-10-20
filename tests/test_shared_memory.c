@@ -172,4 +172,9 @@ int main()
         printf("Test Failed: Accessed negative level\n");
     }
 
+
+    ret = get_entrance(shm, 0, &entrance);
+    pthread_mutex_init(&entrance->lpr.lock, NULL);
+
+    init_shm_vars(shm);
 }
