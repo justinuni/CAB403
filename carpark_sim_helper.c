@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <unistd.h>
+
 #include "globals.h"
 #include "carpark_sim_helper.h"
 #include "carpark_rules.h"
@@ -80,7 +81,7 @@ void trigger_lpr(lpr_t *lpr, char plate[6])
     pthread_mutex_unlock(&lpr->lock);
 }
 
-// Generate a random time within car parking range and then sleep that time
+// Generate a random ms time within car parking range and then usleep that time
 void park_car_random_time()
 {
     int park_time = (rand_num() % ( MAX_CAR_PARKED - MIN_CAR_PARKED + 1)) + MIN_CAR_PARKED;
