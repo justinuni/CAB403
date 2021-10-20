@@ -8,8 +8,6 @@
 #include "carpark_types.h"
 #include "carpark_rules.h"
 #include "carpark_states.h"
-// This should probably be moved to its own header file
-#define KEY ("PARKING")
 
 // Helper function for return total size of carpark
 static int get_sizeof_carpark()

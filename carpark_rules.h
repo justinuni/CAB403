@@ -1,6 +1,8 @@
 #ifndef CARPARK_RULES
 #define CARPARK_RULES
 
+#define KEY ("PARKING")
+
 #define ENTRANCES (5)
 #define EXITS (5)
 #define LEVELS (5)
