@@ -7,6 +7,7 @@
 
 #include "carpark_types.h"
 #include "carpark_rules.h"
+#include "carpark_states.h"
 // This should probably be moved to its own header file
 #define KEY ("PARKING")
 
@@ -43,7 +44,7 @@ int init_shared_memory(void **output)
 		return 1;
 	}
 
-	*output = shm;
+			*output = shm;
 	return 0;
 }
 
@@ -148,7 +149,7 @@ int get_level(void *shm, int level, level_t **output)
 	return 0;
 }
 
-void init_pthread_vars(void *shm)
+void init_shm_vars(void *shm)
 {
 	entrance_t *entrance;
 	for (size_t i = 0; i < ENTRANCES; i++)
@@ -158,6 +159,14 @@ void init_pthread_vars(void *shm)
 		pthread_cond_init(&entrance->lpr.condition, NULL);
 		pthread_mutex_init(&entrance->boomgate.lock, NULL);
 		pthread_cond_init(&entrance->boomgate.condition, NULL);
+
+		for (size_t j = 0; j < 6; j++)
+		{
+			entrance->lpr.plate[j] = 0;
+		}
+
+		entrance->boomgate.status = BOOMGATE_CLOSED;
+		entrance->sign.display = SIGN_EMPTY;
 	}
 
 	exit_t *exit;
@@ -168,6 +177,13 @@ void init_pthread_vars(void *shm)
 		pthread_cond_init(&exit->lpr.condition, NULL);
 		pthread_mutex_init(&exit->boomgate.lock, NULL);
 		pthread_cond_init(&exit->boomgate.condition, NULL);
+
+		for (size_t j = 0; j < 6; j++)
+		{
+			exit->lpr.plate[j] = 0;
+		}
+
+		exit->boomgate.status = BOOMGATE_CLOSED;
 	}
 
 	level_t *level;
@@ -176,5 +192,10 @@ void init_pthread_vars(void *shm)
 		get_level(shm, i, &level);
 		pthread_mutex_init(&level->lpr.lock, NULL);
 		pthread_cond_init(&level->lpr.condition, NULL);
-	}	
+
+		for (size_t j = 0; j < 6; j++)
+		{
+			level->lpr.plate[j] = 0;
+		}
+	}
 }
