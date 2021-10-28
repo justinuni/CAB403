@@ -1,5 +1,47 @@
-#include "hash.h"
+#include "PVI.h"
+int main(int argc, char* argv[]){
+    //read plates in plates.txt into hash table
+    ht_t* table = create_hashtable();
+    FILE* file = fopen("plates.txt", "r");
+    if (!file){
+        printf("Could not open plates.txt for reading.\n");
+        return 0;
+    }
+    int count = 0;
+    char plate[50];
+    int inserted;
+    while (count < CAPACITY && fscanf(file, "%s", plate) != EOF){
+        printf("Read plate %s.\n", plate);
+        char* thePlate = (char*)(malloc(sizeof(char) * (strlen(plate) + 1)));
+        strcpy(thePlate, plate);
+        inserted = insert(table, thePlate, thePlate);
+        if (!inserted){
+            printf("An error occured while reading plates.txt.\n");
+            return 0;
+        }
+        count += 1;
+    }
+    fclose(file);
+    printf("Finished reading %d plates in plates.txt.\n", count);
 
+    //search for plate
+    while (1){//loop until user enters no
+        printf("Enter plate number or -1 to stop: ");
+        scanf("%s", plate);
+        if (!strcmp(plate, "-1")){
+            break;
+        }
+        ht_entry_t* entry = get(table, plate);
+        if (entry == NULL){
+            printf("%s not found.\n", plate);
+        }
+        else{
+            printf("%s found.\n", plate);
+        }
+    }
+    //free memory
+    destroy_hash_table(table);
+    
 //function definitions
 
 
@@ -13,11 +55,11 @@ void destroy_hash_table(ht* table){
 }
 
 // creates an empty hash table with capacity CAPACITY
-ht* create_hashtable(){
-    ht* hash_table = (ht*)malloc(sizeof(ht));
+ht_t* create_hashtable(){
+    ht_t* hash_table = (ht_t*)malloc(sizeof(ht_t));
     hash_table->capacity = CAPACITY;
     hash_table->length = 0;
-    hash_table->entries = (ht_entry**)malloc(sizeof(ht_entry*) * hash_table->capacity);
+    hash_table->entries = (ht_entry_t**)malloc(sizeof(ht_entry_t*) * hash_table->capacity);
     //initialize all entries to NULL
     for (size_t i = 0; i < hash_table->capacity; i++){
         hash_table->entries[i] = NULL;
@@ -43,13 +85,13 @@ unsigned long hash_key(const char *s){
     return h;
 }
 
-int insert(ht* table, const char *key, void* value){
+int insert(ht_t* table, const char *key, void* value){
     //check that we have space in the table
     if (table->length >= table->capacity){
         return 0; //false
     }
     long index = hash_key(key) % table->capacity;
-    ht_entry* entry = malloc(sizeof(ht_entry));
+    ht_entry_t* entry = malloc(sizeof(ht_entry_t));
     entry->key = key;
     entry->value = value;
     //use linear probing
@@ -69,7 +111,7 @@ int insert(ht* table, const char *key, void* value){
     return 1;//true
 }
 
-ht_entry* get(ht* table, const char *key){
+ht_entry_t* get(ht_t* table, const char *key){
     long index = hash_key(key) % table->capacity;
     if (table->entries[index] == NULL){
         return NULL; //there's nothing there yet
