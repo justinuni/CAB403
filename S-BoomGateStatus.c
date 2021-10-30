@@ -10,6 +10,16 @@
 
 volatile void *simulator_shm;
 
+
+//This function will be called by the manager when it wants a specific gate to be opened
+//Input: A pointer to the relevant boomgate
+void open_boomgate(boomgate_t *boomgate) {
+    //Open the boomgate
+}
+
+
+
+
 void *boom_gate_controller_entry(int level){
     int addr = 288 * level + 96;
 	volatile struct boomgate_t *bg = simulator_shm + addr; 
