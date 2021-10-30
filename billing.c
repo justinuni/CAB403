@@ -24,6 +24,29 @@ struct licence_ht
 licence_ht_t licence_ht;
 
 
+//This function will be called when a car ENTERS the carpark and STARTS its billing period
+//Input: A pointer to the license plate
+void start_billing(char* plate) {
+    
+}
+
+
+//This function will be called when a car LEAVES the carpark and ENDS its billing period
+//Input: A pointer to the license plate
+//Returns: The price of the car's bill
+float end_billing(char* plate) {
+    float bill_total;
+
+    
+    return bill_total;
+}
+
+
+
+
+
+
+
 size_t bernstein_hash_function(char *s)
 {
     size_t hash = 5381;

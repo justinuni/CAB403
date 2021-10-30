@@ -8,24 +8,24 @@
 
 
 //struct for a hash table entry
-typedef struct {
+typedef struct ht_entry {
     const char* key;
     void* value;
-} ht_entry;
+} ht_entry_t;
 
-typedef struct {
-    ht_entry** entries;
+typedef struct ht {
+    ht_entry_t** entries;
     size_t capacity;
     size_t length;
-} ht;
+} ht_t;
 
-void destroy_hash_table(ht* table);
+void destroy_hash_table(ht_t* table);
 
 // creates an empty hash table with capacity CAPACITY
-ht* create_hashtable();
+ht_t* create_hashtable();
 
 unsigned long hash_key(const char *s);
 
-int insert(ht* table, const char *key, void* value);
+int insert(ht_t* table, const char *key, void* value);
 
-ht_entry* get(ht* table, const char *key);
+ht_entry_t* get(ht_t* table, const char *key);

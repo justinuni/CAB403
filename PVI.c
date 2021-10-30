@@ -1,4 +1,58 @@
+#include <stdio.h>
+#include <stdbool.h>
+
 #include "PVI.h"
+
+
+
+
+
+//This function is called when a car tries to enter the carpark. Will be used to check 
+// if the car is allowed inside (i.e. if it's on the plates.txt list)
+//Input: A pointer to the license plate
+//Returns: A bool for whether or not the car has access
+bool check_access(char* plate) {
+    bool access = false;
+
+    //Check if the plate supplied is in the table
+
+    //If the car/plate is in the hash table, make access=true
+    //Else, if the car/plate isn't in the hash table, make access=false
+
+    return access;
+}
+
+//This function will be called whenever the car moves up or down a level, and is used 
+// to keep track of what level each car is on
+//Input: A pointer to the license plate
+void update_level(char* plate, int level) {
+    //Update the level that the car is on in the hash table 
+}
+
+//This function gets the level that a car is currently on
+//Input: A pointer to the license plate
+//Returns: The level of the car
+int get_level(char* plate) {
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 int main(int argc, char* argv[]){
     //read plates in plates.txt into hash table
     ht_t* table = create_hashtable();
@@ -41,11 +95,11 @@ int main(int argc, char* argv[]){
     }
     //free memory
     destroy_hash_table(table);
-    
+}
 //function definitions
 
 
-void destroy_hash_table(ht* table){
+void destroy_hash_table(ht_t* table){
     //delete the entries
     for (int i = 0; i < table->length; i++){
         free(table->entries[i]);
