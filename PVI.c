@@ -25,14 +25,14 @@ bool check_access(char* plate) {
 //This function will be called whenever the car moves up or down a level, and is used 
 // to keep track of what level each car is on
 //Input: A pointer to the license plate
-void update_level(char* plate, int level) {
+void update_car_level(char* plate, int level) {
     //Update the level that the car is on in the hash table 
 }
 
 //This function gets the level that a car is currently on
 //Input: A pointer to the license plate
 //Returns: The level of the car
-int get_level(char* plate) {
+int get_car_level(char* plate) {
 
 }
 
