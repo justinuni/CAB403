@@ -151,14 +151,21 @@ int get_level(void *shm, int level, level_t **output)
 // Input: Void pointer shm
 void init_shm_vars(void *shm)
 {
+	pthread_mutexattr_t mutexattr;
+	pthread_condattr_t condattr;
+	pthread_mutexattr_setpshared(&mutexattr, PTHREAD_PROCESS_SHARED);
+	pthread_condattr_setpshared(&condattr, PTHREAD_PROCESS_SHARED);
+
 	entrance_t *entrance;
 	for (size_t i = 0; i < ENTRANCES; i++)
 	{
 		get_entrance(shm, i, &entrance);
-		pthread_mutex_init(&entrance->lpr.lock, NULL);
-		pthread_cond_init(&entrance->lpr.condition, NULL);
-		pthread_mutex_init(&entrance->boomgate.lock, NULL);
-		pthread_cond_init(&entrance->boomgate.condition, NULL);
+		pthread_mutex_init(&entrance->lpr.lock,&mutexattr);
+		pthread_cond_init(&entrance->lpr.condition, &condattr);
+		pthread_mutex_init(&entrance->boomgate.lock, &mutexattr);
+		pthread_cond_init(&entrance->boomgate.condition, &condattr);
+		pthread_mutex_init(&entrance->sign.lock, &mutexattr);
+		pthread_cond_init(&entrance->sign.condition, &condattr);
 
 		for (size_t j = 0; j < 6; j++)
 		{
@@ -173,10 +180,10 @@ void init_shm_vars(void *shm)
 	for (size_t i = 0; i < EXITS; i++)
 	{
 		get_exit(shm, i, &exit);
-		pthread_mutex_init(&exit->lpr.lock, NULL);
-		pthread_cond_init(&exit->lpr.condition, NULL);
-		pthread_mutex_init(&exit->boomgate.lock, NULL);
-		pthread_cond_init(&exit->boomgate.condition, NULL);
+		pthread_mutex_init(&exit->lpr.lock, &mutexattr);
+		pthread_cond_init(&exit->lpr.condition, &condattr);
+		pthread_mutex_init(&exit->boomgate.lock, &mutexattr);
+		pthread_cond_init(&exit->boomgate.condition, &condattr);
 
 		for (size_t j = 0; j < 6; j++)
 		{
@@ -190,12 +197,15 @@ void init_shm_vars(void *shm)
 	for (size_t i = 0; i < LEVELS; i++)
 	{
 		get_level(shm, i, &level);
-		pthread_mutex_init(&level->lpr.lock, NULL);
-		pthread_cond_init(&level->lpr.condition, NULL);
+		pthread_mutex_init(&level->lpr.lock, &mutexattr);
+		pthread_cond_init(&level->lpr.condition, &condattr);
 
 		for (size_t j = 0; j < 6; j++)
 		{
 			level->lpr.plate[j] = 0;
 		}
 	}
+
+	pthread_mutexattr_destroy(&mutexattr);
+	pthread_condattr_destroy(&condattr);
 }
