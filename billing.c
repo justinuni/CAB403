@@ -9,7 +9,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <omp.h>
-#include "PVI.H"
+#include "PVI.h"
 typedef struct licence licence_t;
 struct licence
 {
