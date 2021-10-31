@@ -11,6 +11,9 @@
 typedef struct ht_entry {
     const char* key;
     void* value;
+    int level;
+    time_t billStart; //the time that billing was started
+    time_t billEnd; //the time that billing was stopped ()
 } ht_entry_t;
 
 typedef struct ht {

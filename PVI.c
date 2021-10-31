@@ -11,42 +11,29 @@
 // if the car is allowed inside (i.e. if it's on the plates.txt list)
 //Input: A pointer to the license plate
 //Returns: A bool for whether or not the car has access
-bool check_access(char* plate) {
+bool check_access(ht_t* table, char* plate) {
     bool access = false;
 
     //Check if the plate supplied is in the table
 
     //If the car/plate is in the hash table, make access=true
     //Else, if the car/plate isn't in the hash table, make access=false
-
+    if (get(table, plate) != NULL){
+        access = true;
+    }
     return access;
 }
 
 //This function will be called whenever the car moves up or down a level, and is used 
 // to keep track of what level each car is on
 //Input: A pointer to the license plate
-void update_car_level(char* plate, int level) {
+void update_car_level(ht_t* table, char* plate, int level) {
     //Update the level that the car is on in the hash table 
+    ht_entry_t* entry = get(table, plate);
+    if (entry != NULL){
+        entry->level = level;
+    }
 }
-
-//This function gets the level that a car is currently on
-//Input: A pointer to the license plate
-//Returns: The level of the car
-int get_car_level(char* plate) {
-
-}
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
