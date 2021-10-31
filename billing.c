@@ -26,24 +26,26 @@ licence_ht_t licence_ht;
 
 //This function will be called when a car ENTERS the carpark and STARTS its billing period
 //Input: A pointer to the license plate
-void start_billing(char* plate) {
-    
+void start_billing(ht_t* table, char* plate){
+    ht_entry_t* entry = get(table, plate);
+    if (entry != NULL && entry->billStart == 0){
+        entry->billStart = time(NULL);
+    }
 }
-
-
 //This function will be called when a car LEAVES the carpark and ENDS its billing period
 //Input: A pointer to the license plate
 //Returns: The price of the car's bill
-float end_billing(char* plate) {
-    float bill_total;
-
-    
-    return bill_total;
+void stop_billing(ht_t* table, char* plate){
+    ht_entry_t* entry = get(table, plate);
+    if (entry != NULL && entry->billEnd == 0){
+        entry->billEnd = time(NULL);
+        //calculate total cost
+        double cost = (BILL_CENTS_PER_MILLISECOND * (entry->billEnd - entry->billStart) * 1000) / 100.0;
+        FILE* file = fopen("billing.txt", "a");
+        fprintf(file, "%s $%.2f\n", plate, cost);
+        fclose(file);
+    }
 }
-
-
-
-
 
 
 
