@@ -13,33 +13,32 @@ void manager() {
     void *shm;
     get_shared_memory(&shm);
 
+    initialise_capacities();
+
     entrance_t *entrance_data;
     exit_t *exit_data;
     level_t *level_data;
-
-
-    pthread_t threads[ENTRANCES + EXITS + LEVELS];
-    int thread_tracker = 0;
-    initialise_capacities();
+    
+    pthread_t entrance_threads[ENTRANCES];
+    pthread_t exit_threads[EXITS];
+    pthread_t level_threads[LEVELS];
 
     //Entrance threads
-    for (int i = 0; i < ENTRANCES; i++, thread_tracker++) {  
+    for (int i = 0; i < ENTRANCES; i++) {  
         get_entrance(shm, i, &entrance_data);
-        pthread_create(&threads[i], NULL, entrance_data, (void*)entrance);
+        pthread_create(&entrance_threads[i], NULL, entrance_data, (void*)entrance);
     }
 
     //Exit threads
-    for (int i = thread_tracker, j = 0; i < ENTRANCES + EXITS; i++, thread_tracker++) {
-        j = thread_tracker - ENTRANCES;
-        get_exit(shm, j, &exit_data);
-        pthread_create(&threads[i], NULL, exit_data, (void*)exit);
+    for (int i = 0; i < EXITS; i++) {
+        get_exit(shm, i, &exit_data);
+        pthread_create(&exit_threads[i], NULL, exit_data, (void*)exit);
     }
 
     //Level threads
-    for (int i = thread_tracker, k = 0; i < ENTRANCES + EXITS + LEVELS; i++, thread_tracker++) {
-        k = thread_tracker - ENTRANCES - EXITS;
-        get_exit(shm, k, &level_data);
-        pthread_create(&threads[i], NULL, level_data, (void*)entrance);
+    for (int i = 0; i < LEVELS; i++) {
+        get_exit(shm, i, &level_data);
+        pthread_create(&level_threads[i], NULL, level_data, (void*)level);
     }
 }
 
