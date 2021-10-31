@@ -7,6 +7,8 @@
 #define EXITS (5)
 #define LEVELS (5)
 
+#define LEVEL_CAPACITY (20)
+
 #define MIN_CAR_SPAWN (1)
 #define MAX_CAR_SPAWN (100)
 #define LPR_QUEUE_WAIT (2)
