@@ -3,31 +3,75 @@
 #include <stdbool.h>
 #include <time.h>
 #include <unistd.h>
+#include <string.h>
 
 #include "globals.h"
 #include "carpark_sim_helper.h"
 #include "carpark_rules.h"
 #include "carpark_states.h"
 
+
+int import_valid_plates(char **plates, int *len)
+{
+    FILE* file = fopen(PLATES_FILENAME, "r");
+    if (!file)
+    {
+        printf("File does not exist!\n");
+        return 1;
+    }
+
+    int count = 0;
+    char plate[50];
+    while(count < MAX_IMPORTED_PLATES && fscanf(file, "%s", plate) != EOF)
+    {
+        strcpy(plates[count], plate);
+        count++;
+    }
+
+    *len = count;
+    
+    return 0;
+}
+
 // This function will generate a random license plate following the rules of 3 numbers then 3 capitals
 // Input: Char plate array of min length 6
 // Output: Nothing, inputted plate array is modified
-void generate_car(char *plate)
+void generate_car(char *plate, char **plates, int plates_len)
 {
     char val;
-    for (size_t i = 0; i < 3; i++)
+    int chance = rand_num() % 100 < 50;
+    if (chance == true)
     {
-        // restrict the rand between the ascii number range
-        val = (rand_num() % (57 - 48 + 1)) + 48;
-        plate[i] = val;
+        int index;
+        index = rand_num_in_range(plates_len - 1, 0);
+
+        for (size_t i = 0; i < 3; i++)
+        {
+            plate[i] = plates[index][i];
+        }
+
+        for (size_t i = 3; i < 6; i++)
+        {
+            plate[i] = plates[index][i];
+        }
+    }
+    else
+    {
+        for (size_t i = 0; i < 3; i++)
+        {
+            // restrict the rand between the ascii number range
+            val = (rand_num() % (57 - 48 + 1)) + 48;
+            plate[i] = val;
+        }
+
+        for (size_t i = 3; i < 6; i++)
+        {
+            // restrict the rand between the ascii capital letter range
+            val = (rand_num() % (90 - 65 + 1)) + 65;
+            plate[i] = val;
+        }
     }
 
-    for (size_t i = 3; i < 6; i++)
-    {
-        // restrict the rand between the ascii capital letter range
-        val = (rand_num() % (90 - 65 + 1)) + 65;
-        plate[i] = val;
-    }
 }
 
 // Function will obtain its mutex locks and wait until sign display is not == SIGN_EMPTY
@@ -45,6 +89,7 @@ char read_sign(sign_t *sign)
 
     char level = sign->display;
     sign->display = SIGN_EMPTY;
+    printf("sign is equal to %d\n", level);
 
     pthread_mutex_unlock(&sign->lock);
 
@@ -61,6 +106,7 @@ void wait_for_boomgates(boomgate_t *boomgate)
     while (boomgate->status != BOOMGATE_OPENED)
     {
         pthread_cond_wait(&boomgate->condition, &boomgate->lock);
+        // printf("boom awaken status %c\n", boomgate->status);
     }
 
     pthread_mutex_unlock(&boomgate->lock);
@@ -75,7 +121,7 @@ void trigger_lpr(lpr_t *lpr, char plate[6])
 
     while (lpr->plate[0] == LPR_EMPTY)
     {
-        pthread_cond_wait(&lpr->condition, &lpr->lock   );
+        pthread_cond_wait(&lpr->condition, &lpr->lock);
     }
     for (size_t i = 0; i < 6; i++)
     {
@@ -96,7 +142,7 @@ void park_car_random_time()
 
 int verify_sign_contents(int value)
 {
-    if (value >= 0 && value <= LEVELS)
+    if (value >= '0' && value <= LEVELS + '0')
     {
         return true;
     }

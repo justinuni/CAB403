@@ -3,6 +3,9 @@
 
 #define KEY ("PARKING")
 
+#define MAX_IMPORTED_PLATES (128)
+#define PLATES_FILENAME ("plates.txt")
+
 #define ENTRANCES (5)
 #define EXITS (5)
 #define LEVELS (5)

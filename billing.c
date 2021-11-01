@@ -8,47 +8,38 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <omp.h>
-#include "PVI.h"
-typedef struct licence licence_t;
-struct licence
-{
-    char *licence;
-    licence_t *next;
-};
-typedef struct licence_ht licence_ht_t;
-struct licence_ht
-{
-    licence_t **buckets;
-    size_t size;
-};
-licence_ht_t licence_ht;
+#include "hashtable.h"
+#include "billing.h"
 
 
+
+// ! needs to be passed a hashtable
 //This function will be called when a car ENTERS the carpark and STARTS its billing period
 //Input: A pointer to the license plate
-void start_billing(ht_t* table, char* plate){
-    ht_entry_t* entry = get(table, plate);
+void start_billing(ht_t *licence_ht, char* plate){
+    ht_entry_t* entry = get(licence_ht, plate);
     if (entry != NULL && entry->billStart == 0){
         entry->billStart = time(NULL);
     }
 }
+
+// ! needs to be passsed a hashtable
 //This function will be called when a car LEAVES the carpark and ENDS its billing period
 //Input: A pointer to the license plate
 //Returns: The price of the car's bill
-float end_billing(char* plate) {
+float end_billing(ht_t *licence_ht, char* plate) {
     float bill_total;
- ht_entry_t* entry = get(table, plate);
+    ht_entry_t* entry = get(licence_ht, plate);
     if (entry != NULL && entry->billEnd == 0){
         entry->billEnd = time(NULL);
         //calculate total cost
          bill_total = (BILL_CENTS_PER_MILLISECOND * (entry->billEnd - entry->billStart) * 1000) / 100.0;
+        FILE* file = fopen("billing.txt", "a");
+        fprintf(file, "%s $%.2f\n", plate, bill_total);
+        fclose(file);
      return bill_total;
  }
 }
-
-
-
 
 size_t bernstein_hash_function(char *s)
 {
@@ -146,8 +137,8 @@ FILE *create_billing_file(char *filename)
 
 bool write_to_billing_file(FILE *file_ptr, char *licence, float bill_total)
 {
-     fprintf(file, "%s $%.2f\n", plate, bill_total);
-        fclose(file);
+    fprintf(file_ptr, "%s $%.2f\n", licence, bill_total);
+    fclose(file_ptr);
     return true;
 }
 
@@ -179,15 +170,15 @@ bool import_car_plates(char *fn, licence_ht_t *ht)
 }
 
 
-int main(void)
-{
-    // Import licence plates
-    if(!import_car_plates("plates.txt",&licence_ht)){
-        printf("Licence import failure exiting safely");
-        return 1;
-    } else{
-        printf("Licence imported safely");
-        print_hash_table(&licence_ht);
-    }
+// int main(void)
+// {
+//     // Import licence plates
+//     if(!import_car_plates("plates.txt",&licence_ht)){
+//         printf("Licence import failure exiting safely");
+//         return 1;
+//     } else{
+//         printf("Licence imported safely");
+//         print_hash_table(&licence_ht);
+//     }
 
-}
+// }

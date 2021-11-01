@@ -103,7 +103,7 @@ void *test_sim_lpr(void *data)
         while(lpr->plate[0] == 0)
         {
             pthread_cond_wait(&lpr->condition, &lpr->lock);
-            printf("%c lpr %d woke up\n", lpr_data->type, num);
+            // printf("%c lpr %d woke up\n", lpr_data->type, num);
         }
         printf("%c lpr %d triggered\n", lpr_data->type, num);
 
@@ -174,27 +174,28 @@ void *test_sim_boomgates(void *data)
         bg_cond = &bg_exit_cond[entrance_num];
     }
 
+    pthread_mutex_lock(bg_lock);
+
     while(true)
     {
-        pthread_mutex_lock(bg_lock);
 
-        while(*open_gate == false || bg->status != BOOMGATE_CLOSED)
+        // while(*open_gate == false || bg->status != BOOMGATE_CLOSED)
+        while(bg->status != BOOMGATE_CLOSED)
         {
-            if (!*open_gate)
-            {
-                pthread_cond_wait(bg_cond, bg_lock);
-            }
-            else
-            {
-                pthread_cond_wait(&bg->condition, &bg->lock);
-            }
+            // if (!*open_gate)
+            // {
+            //     pthread_cond_wait(bg_cond, bg_lock);
+            // }
+            // else
+            // {
+            pthread_cond_wait(&bg->condition, &bg->lock);
+            // }
             printf("bg %d woke up state %d %c\n", entrance_num, *open_gate, bg->status);
         }
 
         bg->status = BOOMGATE_RAISING;
         pthread_cond_broadcast(&bg->condition);
         pthread_mutex_unlock(bg_lock);
-        pthread_mutex_unlock(&bg->lock);
         
         while(bg->status != BOOMGATE_OPENED)
         {
@@ -213,13 +214,13 @@ void *test_sim_boomgates(void *data)
         *open_gate = false;
         pthread_mutex_unlock(bg_lock);
 
-        while(bg->status != BOOMGATE_CLOSED)
-        {   printf("boomgate %c not closed\n", boomgate->type);
-            pthread_cond_wait(&bg->condition, &bg->lock);
-        }
+        // while(bg->status != BOOMGATE_CLOSED)
+        // {   printf("boomgate %c not closed\n", boomgate->type);
+        //     pthread_cond_wait(&bg->condition, &bg->lock);
+        // }
 
-        bg->status = BOOMGATE_CLOSED;     
-        pthread_mutex_unlock(&bg->lock);
+        // bg->status = BOOMGATE_CLOSED;     
+        // pthread_mutex_unlock(&bg->lock);
     }
 }
 
@@ -235,6 +236,38 @@ int main()
     void *shm;
     init_shared_memory(&shm);
     init_shm_vars(shm);
+
+
+    pthread_t test_entrance_bg[ENTRANCES];
+    pthread_t test_entrance_lpr[ENTRANCES];
+    pthread_t test_entrance_sign[ENTRANCES];
+    pthread_t test_exit_bg[EXITS];
+    pthread_t test_exit_lpr[EXITS];
+
+    for (size_t i = 0; i < ENTRANCES; i++)
+    {
+        data_t *data = malloc(sizeof(data_t));
+        int *num = malloc(sizeof(int));
+        *num = i;
+        data->type = 'e';
+        data->num = i;
+        pthread_mutex_init(&bg_entrance_lock[i], NULL);
+        pthread_cond_init(&bg_entrance_cond[i], NULL);
+        pthread_create(&test_entrance_bg[i], NULL, test_sim_boomgates, (void*)data);
+        pthread_create(&test_entrance_lpr[i], NULL, test_sim_lpr, (void*)data);
+        // pthread_create(&entrance_sign[i], NULL, test_s4m_sign, (void*)num);
+    }
+    for (size_t i = 0; i < EXITS; i++)
+    {
+        data_t *data = malloc(sizeof(data_t));
+        int *num = malloc(sizeof(int));
+        *num = i;
+        data->type = 'E';
+        data->num = i;
+        pthread_mutex_init(&bg_exit_lock[i], NULL);
+        pthread_create(&test_exit_bg[i], NULL, test_sim_boomgates, (void*)data);
+        pthread_create(&test_exit_lpr[i], NULL, test_sim_lpr, (void*)data);
+    }
 
     // initialize our shm space
     pthread_t generate_car_thread;
@@ -276,36 +309,6 @@ int main()
     }
     
 
-    pthread_t test_entrance_bg[ENTRANCES];
-    pthread_t test_entrance_lpr[ENTRANCES];
-    pthread_t test_entrance_sign[ENTRANCES];
-    pthread_t test_exit_bg[EXITS];
-    pthread_t test_exit_lpr[EXITS];
-
-    for (size_t i = 0; i < ENTRANCES; i++)
-    {
-        data_t *data = malloc(sizeof(data_t));
-        int *num = malloc(sizeof(int));
-        *num = i;
-        data->type = 'e';
-        data->num = i;
-        pthread_mutex_init(&bg_entrance_lock[i], NULL);
-        pthread_cond_init(&bg_entrance_cond[i], NULL);
-        pthread_create(&test_entrance_bg[i], NULL, test_sim_boomgates, (void*)data);
-        pthread_create(&test_entrance_lpr[i], NULL, test_sim_lpr, (void*)data);
-        // pthread_create(&entrance_sign[i], NULL, test_s4m_sign, (void*)num);
-    }
-    for (size_t i = 0; i < EXITS; i++)
-    {
-        data_t *data = malloc(sizeof(data_t));
-        int *num = malloc(sizeof(int));
-        *num = i;
-        data->type = 'E';
-        data->num = i;
-        pthread_mutex_init(&bg_exit_lock[i], NULL);
-        pthread_create(&test_exit_bg[i], NULL, test_sim_boomgates, (void*)data);
-        pthread_create(&test_exit_lpr[i], NULL, test_sim_lpr, (void*)data);
-    }
     // pthread_t sleep_thread;
     // pthread_create(&sleep_thread, NULL, test_sleep, NULL);
     fflush(stdout);

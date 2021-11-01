@@ -4,13 +4,14 @@
 #include <pthread.h>
 #include <stdbool.h>
 #include <unistd.h>
+#include <signal.h>
 
 #include "carpark_simulator.h"
 #include "globals.h"
 #include "carpark_types.h"
 #include "carpark_shared_memory.h"
-#include "carpark_sim_helper.h"
 #include "carpark_rules.h"
+#include "carpark_sim_helper.h"
 #include "car_queue.h"
 #include "carpark_states.h"
 
@@ -33,7 +34,24 @@ void *generate_random_cars(void *data)
     int queued_up;
     int start;
     int i;
+
+    // Import array of valid plates allowed in car park
+    // As this is intended to persist until program end does not need to be dealloc
+    char **plates = calloc(MAX_IMPORTED_PLATES, sizeof(char*));
+    int plates_len;
+
+    for (size_t i = 0; i < MAX_IMPORTED_PLATES; i++)
+    {
+        char *temp_plate = calloc(6, sizeof(char));
+        plates[i] = temp_plate;
+    }
     
+
+    if (import_valid_plates(plates, &plates_len) != 0)
+    {
+        printf("Couldn't import valid plates!\n");
+        exit(SIGKILL);
+    }    
 
     while(true)
     {
@@ -42,7 +60,7 @@ void *generate_random_cars(void *data)
         usleep(sleep_time);
         
         entrance = (rand_num() % ((ENTRANCES-1) - 0 + 1)) + 0;
-        generate_car(plate);
+        generate_car(plate, plates, plates_len);
         i = entrance;
         if (enqueue(&entrance_queues[entrance].queue, plate) != 0)
         {
@@ -76,7 +94,7 @@ void *generate_random_cars(void *data)
         if (queued_up)
         {
             memcpy(plate_string, plate, 6);
-            printf("Generated plate: %s for level %d\n", plate_string, i);
+            // printf("Generated plate: %s for level %d\n", plate_string, i);
             if (amount_queued(&entrance_queues[i].queue) == 1)
                 pthread_cond_signal(&entrance_queues[i].entrance_cond);
         }
@@ -106,6 +124,7 @@ void *handle_car(void *data)
             exit(1);
         }
     level_t *level;
+    char level_char;
     int level_num;
     int park_time;
     exit_t *exit_; // ! RENAME THIS
@@ -134,19 +153,23 @@ void *handle_car(void *data)
         trigger_lpr(&entrance->lpr, plate);
         printf("Reading sign %d\n", entrance_num);
         // Read the sign and convert the char to
-        level_num = read_sign(&entrance->sign) - '0';
-        printf("Sign has been read\n");
-        if (verify_sign_contents(level_num) != true)
+        level_char = read_sign(&entrance->sign);
+        printf("Sign has been read for value %d\n", level_char);
+        if (verify_sign_contents(level_char) != true)
         {
             printf("Sign for entrance %d does not contain a valid level has value %d\n", entrance_num, level_num);
             continue;
         }
+        level_num = level_char - '0';
         memcpy(plate_string, plate, 6);
         printf("Plate %s has passed entrance %d lpr and been assigned level %d\n", plate_string, entrance_num, level_num);
         wait_for_boomgates(&entrance->boomgate);
 
+        pthread_mutex_lock(&entrance_queue->lock);
         entrance_queue->lpr_free = true;
         pthread_cond_signal(&entrance_queue->entrance_cond);
+        pthread_mutex_unlock(&entrance_queue->lock);
+
         
         printf("Plate %s is driving to level %d\n", plate_string, level_num);
         usleep(CAR_DRIVING_TIME);
@@ -249,21 +272,26 @@ void *boomgate_watcher(void *data)
     {
         if(boomgate->status == BOOMGATE_RAISING)
         {
-            // printf("%c boomgate %d opening\n", cp_data->type, num);
+            printf("%c boomgate %d opening\n", cp_data->type, num);
+            pthread_mutex_unlock(&boomgate->lock);
             usleep(BOOMGATE_RAISING_TIME);
             boomgate->status = BOOMGATE_OPENED;
             pthread_cond_broadcast(&boomgate->condition);
+            pthread_mutex_lock(&boomgate->lock);
+
         }
         else if(boomgate->status == BOOMGATE_LOWERING)
         {
-            // printf("%c boomgate %d lowering \n", cp_data->type, num);
+            printf("%c boomgate %d lowering \n", cp_data->type, num);
+            pthread_mutex_unlock(&boomgate->lock);
             usleep(BOOMGATE_LOWERING_TIME);
             boomgate->status = BOOMGATE_CLOSED;
-            pthread_cond_broadcast(&boomgate->condition);
+            // pthread_cond_broadcast(&boomgate->condition);
+            pthread_mutex_lock(&boomgate->lock);
         }
         else
         {  
-            // printf("%c boomgate %d waiting state is %c\n", cp_data->type, num, boomgate->status);
+            printf("%c boomgate %d waiting state is %c\n", cp_data->type, num, boomgate->status);
             pthread_cond_wait(&boomgate->condition, &boomgate->lock);
         }
     }

@@ -70,5 +70,7 @@ int main()
         data->num = i;
         pthread_create(&exit_bg[i], NULL, boomgate_watcher, (void*)data);
     }
+
+    pthread_join(generate_car_thread, NULL);
     
 }
