@@ -19,25 +19,24 @@ volatile void *simulator_shm;
 
 //This function will be called by the manager when it wants a specific gate to be opened
 //Input: A pointer to the relevant boomgate
-void open_boomgate(boomgate_t *boomgate) {
-    //Open the boomgate
-    char manager;
-    manager = scanf ("%d",&manager);
-    if (manager == 'O')
-    {
-    	boomgate.lock;
+void *open_boomgate(boomgate_t  *boomgate)
+{
+	struct open_boomgate *bg = boomgate;
+	pthread_mutex_lock(&bg->lock);
+	for (;;) {
+		if (bg->status == 'C') {
+			bg->status = 'R';
+			pthread_cond_broadcast(&bg->condition);
+		}
+		if (bg->status == 'O') {
+			bg->status = 'L';
+			pthread_cond_broadcast(&bg->condition);
+		}
+		pthread_cond_wait(&bg->condition, &bg->lock);
 	}
-	else if (manger == 'C')
-	{
-		boomgate.condition;
-	}
-	else if(manager == 'F')
-	{
-		boomgate.status = "Updated";
-	}
-	  
+	pthread_mutex_unlock(&bg->lock);
+	
 }
-
 
 
 void *boom_gate_controller_entry(int level){
