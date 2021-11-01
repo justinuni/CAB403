@@ -37,6 +37,16 @@ void update_car_level(ht_t* table, char* plate, int level) {
 
 
 
+//This function gets the level that a car is currently on
+//Input: A pointer to the license plate
+//Returns: The level of the car
+int get_level(ht_t* table, char* plate) {
+    ht_entry_t* entry = get(table, plate);
+    if (entry != NULL){
+        return entry->level;
+    }
+    return -1;
+}
 
 
 
