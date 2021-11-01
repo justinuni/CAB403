@@ -9,5 +9,6 @@
 extern pthread_mutex_t g_rand_lock;
 
 int rand_num();
+int rand_num_in_range(int max, int min);
 
 #endif

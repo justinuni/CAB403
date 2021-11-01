@@ -60,22 +60,7 @@ void wait_for_boomgates(boomgate_t *boomgate)
 
     while (boomgate->status != BOOMGATE_OPENED)
     {
-        if(boomgate->status == BOOMGATE_RAISING)
-        {
-            usleep(BOOMGATE_RAISING_TIME);
-            boomgate->status = BOOMGATE_OPENED;
-            pthread_cond_broadcast(&boomgate->condition);
-        }
-        else if(boomgate->status == BOOMGATE_LOWERING)
-        {
-            usleep(BOOMGATE_LOWERING_TIME);
-            boomgate->status = BOOMGATE_CLOSED;
-            pthread_cond_broadcast(&boomgate->condition);
-        }
-        else
-        {
-            pthread_cond_wait(&boomgate->condition, &boomgate->lock);
-        }
+        pthread_cond_wait(&boomgate->condition, &boomgate->lock);
     }
 
     pthread_mutex_unlock(&boomgate->lock);
@@ -88,6 +73,10 @@ void trigger_lpr(lpr_t *lpr, char plate[6])
 {
     pthread_mutex_lock(&lpr->lock);
 
+    while (lpr->plate[0] == LPR_EMPTY)
+    {
+        pthread_cond_wait(&lpr->condition, &lpr->lock   );
+    }
     for (size_t i = 0; i < 6; i++)
     {
         lpr->plate[i] = plate[i];

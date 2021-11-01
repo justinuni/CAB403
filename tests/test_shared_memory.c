@@ -1,5 +1,7 @@
 #include <stdio.h>
-#include "../carpark_shared_memory.c"
+#include <unistd.h>
+#include "../carpark_shared_memory.h"
+#include "../carpark_rules.h"
 
 int main()
 {
