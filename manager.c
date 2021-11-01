@@ -8,6 +8,11 @@
 
 #include "PVI.h"
 
+int main() {
+    manager();
+    return 0;
+}
+
 
 void manager() {
     void *shm;
