@@ -21,8 +21,22 @@ volatile void *simulator_shm;
 //Input: A pointer to the relevant boomgate
 void open_boomgate(boomgate_t *boomgate) {
     //Open the boomgate
+    char manager;
+    manager = scanf ("%d",&manager);
+    if (manager == 'O')
+    {
+    	boomgate.lock;
+	}
+	else if (manger == 'C')
+	{
+		boomgate.condition;
+	}
+	else if(manager == 'F')
+	{
+		boomgate.status = "Updated";
+	}
+	  
 }
-
 
 
 
