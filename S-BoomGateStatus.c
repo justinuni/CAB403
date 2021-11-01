@@ -7,6 +7,12 @@
 #include "carpark_types.h"
 #include "carpark_states.h"
 #include "carpark_rules.h"
+typedef struct boom_gate_simulation boom_gate_simulation_t;
+struct boom_gate_simulation {
+	pthread_mutex_t m;
+	pthread_cond_t c;
+	char s;
+};
 
 volatile void *simulator_shm;
 
