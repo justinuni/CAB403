@@ -43,9 +43,6 @@ float end_billing(char* plate) {
         entry->billEnd = time(NULL);
         //calculate total cost
          bill_total = (BILL_CENTS_PER_MILLISECOND * (entry->billEnd - entry->billStart) * 1000) / 100.0;
-        FILE* file = fopen("billing.txt", "a");
-        fprintf(file, "%s $%.2f\n", plate, bill_total);
-        fclose(file);
      return bill_total;
  }
 }
@@ -147,9 +144,10 @@ FILE *create_billing_file(char *filename)
     return file_ptr;
 }
 
-bool write_to_billing_file(FILE *file_ptr, char *licence, double price)
+bool write_to_billing_file(FILE *file_ptr, char *licence, float bill_total)
 {
-    fprintf(file_ptr, "%s $%.2f\n", licence, price);
+     fprintf(file, "%s $%.2f\n", plate, bill_total);
+        fclose(file);
     return true;
 }
 
