@@ -18,28 +18,39 @@ void manager() {
     entrance_t *entrance_data;
     exit_t *exit_data;
     level_t *level_data;
-    
+
+    pthread_t status_thread;
     pthread_t entrance_threads[ENTRANCES];
     pthread_t exit_threads[EXITS];
     pthread_t level_threads[LEVELS];
 
+    //Thread for status system
+    pthread_create(&status_thread, NULL, display_status, NULL);
+
     //Entrance threads
     for (int i = 0; i < ENTRANCES; i++) {  
         get_entrance(shm, i, &entrance_data);
-        pthread_create(&entrance_threads[i], NULL, entrance_data, (void*)entrance);
+        pthread_create(&entrance_threads[i], NULL, entrance, (void*)entrance_data);
     }
 
     //Exit threads
     for (int i = 0; i < EXITS; i++) {
         get_exit(shm, i, &exit_data);
-        pthread_create(&exit_threads[i], NULL, exit_data, (void*)exit);
+        pthread_create(&exit_threads[i], NULL, exit, (void*)exit_data);
     }
 
     //Level threads
     for (int i = 0; i < LEVELS; i++) {
         get_exit(shm, i, &level_data);
-        pthread_create(&level_threads[i], NULL, level_data, (void*)level);
+        pthread_create(&level_threads[i], NULL, level, (void*)level_data);
     }
+
+    for (int i = 0; i < ENTRANCES; i++)
+    {
+        pthread_join(entrance_threads[i], NULL);
+    }
+
+    pthread_join(status_thread, NULL);
 }
 
 
@@ -50,21 +61,23 @@ void entrance(void *data) {
     bool has_access;
     char assigned_level;
 
-    read_lpr(&entrance->lpr, lpr_contents);  //Read the lpr
+    while (1) {
+        read_lpr(&entrance->lpr, lpr_contents);  //Read the lpr
 
-    has_access = check_access(lpr_contents);  //Check if it has access
+        has_access = check_access(lpr_contents);  //Check if it has access
 
-    if (!has_access) {  
-        write_sign(&entrance->sign, 'X');  //Tell it to go away
-    }
-    else {
-        assigned_level = find_level();  //Assign it a level
-        update_sign(assigned_level);  //Tell it where to go 
+        if (!has_access) {  
+            write_sign(&entrance->sign, 'X');  //Tell it to go away
+        }
+        else {
+            assigned_level = find_level();  //Assign it a level
+            update_sign(assigned_level);  //Tell it where to go 
 
-        if (assigned_level == 'X') return 0;  //Carpark is full, so bugger off
+            if (assigned_level == 'X') return 0;  //Carpark is full, so bugger off
 
-        open_boomgate(&entrance->boomgate);  //Open the gates
-        start_billing(lpr_contents);  //Start the billing period
+            open_boomgate(&entrance->boomgate);  //Open the gates
+            start_billing(lpr_contents);  //Start the billing period
+        }
     }
 }
 
@@ -72,12 +85,15 @@ void exit(void *data) {
     exit_t *exit = (exit_t*)data;
     char *lpr_contents;
 
-    read_lpr(&exit->lpr, lpr_contents);
-    open_boomgate(&exit->boomgate);
-    stop_billing(lpr_contents);
+    while (1) {
+        read_lpr(&exit->lpr, lpr_contents);
+        open_boomgate(&exit->boomgate);
+        //total_revenue += stop_billing(lpr_contents); //////////////////////////////////////////////////////////
+        stop_billing(lpr_contents);
 
-    update_capacities(0, -1);  //Remove the car from lvl 0
-    update_car_level(lpr_contents, -1);  //Make the car's level -1 (outside of car park)
+        update_capacities(0, -1);  //Remove the car from lvl 0
+        update_car_level(lpr_contents, -1);  //Make the car's level -1 (outside of car park)
+    }
 }
 
 void level(void *data) {
@@ -85,15 +101,18 @@ void level(void *data) {
     char *lpr_contents;
     int level_num;
 
-    read_lpr(&level->lpr, lpr_contents);
-    level_num = get_car_level(lpr_contents);  //Find out what level the car is currently on
-    update_capacities(get_car_level(lpr_contents), level_num);  //Say the car is moving between levels
-    update_car_level(lpr_contents, level_num);  //Update the car's level in the hash table
+    while (1) {
+        read_lpr(&level->lpr, lpr_contents);
+        level_num = get_car_level(lpr_contents);  //Find out what level the car is currently on
+        update_capacities(get_car_level(lpr_contents), level_num);  //Say the car is moving between levels
+        update_car_level(lpr_contents, level_num);  //Update the car's level in the hash table
+    }
 }
 
 void write_sign(sign_t *sign, char display) {  //Updates what is shown to the vehicles at the entrance
     pthread_mutex_lock(&sign->lock);
     sign->display = display;
+    pthread_cond_signal(&sign->condition);
     pthread_mutex_unlock(&sign->lock);
 } 
 
