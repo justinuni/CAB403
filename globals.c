@@ -14,3 +14,8 @@ int rand_num()
 
     return val;
 }
+
+int rand_num_in_range(int max, int min)
+{
+    return (rand_num() % (max - min + 1)) + min;
+}

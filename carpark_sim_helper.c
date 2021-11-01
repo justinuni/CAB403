@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -56,7 +57,7 @@ char read_sign(sign_t *sign)
 void wait_for_boomgates(boomgate_t *boomgate)
 {
     pthread_mutex_lock(&boomgate->lock);
-    
+
     while (boomgate->status != BOOMGATE_OPENED)
     {
         pthread_cond_wait(&boomgate->condition, &boomgate->lock);
@@ -72,11 +73,15 @@ void trigger_lpr(lpr_t *lpr, char plate[6])
 {
     pthread_mutex_lock(&lpr->lock);
 
+    while (lpr->plate[0] == LPR_EMPTY)
+    {
+        pthread_cond_wait(&lpr->condition, &lpr->lock   );
+    }
     for (size_t i = 0; i < 6; i++)
     {
         lpr->plate[i] = plate[i];
     }
-
+    
     pthread_cond_signal(&lpr->condition);
     pthread_mutex_unlock(&lpr->lock);
 }
@@ -87,4 +92,16 @@ void park_car_random_time()
     int park_time = (rand_num() % ( MAX_CAR_PARKED - MIN_CAR_PARKED + 1)) + MIN_CAR_PARKED;
 
     usleep(park_time);
+}
+
+int verify_sign_contents(int value)
+{
+    if (value >= 0 && value <= LEVELS)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
 }

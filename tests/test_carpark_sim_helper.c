@@ -1,7 +1,12 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <time.h>
-#include "../carpark_sim_helper.c"
-#include "../carpark_shared_memory.c"
+#include <unistd.h>
+
+#include "../carpark_types.h"
+#include "../carpark_rules.h"
+#include "../carpark_sim_helper.h"
+#include "../carpark_shared_memory.h"
 #include "../carpark_states.h"
 
 #define GENERATE_CAR_COUNT (10)
@@ -109,6 +114,7 @@ void *test_boomgate(void *data)
 
     pthread_mutex_lock(&boomgate_lock);
     test_boomgate_counter += 1;
+    pthread_cond_signal(&bg->condition);
     pthread_mutex_unlock(&boomgate_lock);
 }
 
@@ -179,16 +185,43 @@ void main()
 
         pthread_create(&threads[i], NULL, test_boomgate, (void*)&data[i]);
     }
-    printf("BG closed, waking threads, entry should be denied then sleeping for x seconds.\n");
-    pthread_cond_signal(&entrance->boomgate.condition);
-    sleep(2);
-    printf("Slept for x seconds, now opening BG.\n");
-    entrance->boomgate.status = BOOMGATE_OPENED;
-    while(test_boomgate_counter < TEST_BOOMGATE_COUNT)
-    {
-        usleep(LPR_QUEUE_WAIT);
-        pthread_cond_signal(&entrance->boomgate.condition);
+    int sleep_time = 1;
+    printf("BG closed, waking threads, entry should be denied then sleeping for %d seconds.\n", sleep_time);
+    pthread_cond_broadcast(&entrance->boomgate.condition);
+    sleep(sleep_time);
+    printf("Slept for x seconds, now activating BG.\n");
+    // entrance->boomgate.status = BOOMGATE_OPENING;
+    // pthread_cond_broadcast(&entrance->boomgate.condition);
 
+    // while(test_boomgate_counter < TEST_BOOMGATE_COUNT)
+    // {
+    //     usleep(LPR_QUEUE_WAIT);
+    //     pthread_cond_signal(&entrance->boomgate.condition);
+
+    // }
+    for (size_t i = 0; i < 4; i++)
+    {
+        pthread_mutex_lock(&entrance->boomgate.lock);
+        printf("Closing boomgate\n");
+        entrance->boomgate.status = BOOMGATE_LOWERING;
+        pthread_cond_broadcast(&entrance->boomgate.condition);
+        if(test_boomgate_counter < TEST_BOOMGATE_COUNT)
+        {
+            while(entrance->boomgate.status != BOOMGATE_CLOSED)
+            {
+                pthread_cond_wait(&entrance->boomgate.condition, &entrance->boomgate.lock);
+            }
+        }
+        printf("Gate closed\n");
+        pthread_mutex_unlock(&entrance->boomgate.lock);
+        sleep(2);
+        pthread_mutex_lock(&entrance->boomgate.lock);
+        printf("Opening boomgate\n");
+        entrance->boomgate.status = BOOMGATE_RAISING;
+        pthread_mutex_unlock(&entrance->boomgate.lock);
+        pthread_cond_broadcast(&entrance->boomgate.condition);
+        printf("Gate opened\n");
+        usleep(1);
     }
 
     for (size_t i = 0; i < TEST_BOOMGATE_COUNT; i++)
@@ -205,5 +238,4 @@ void main()
         double time_spent = ((double)(end - begin)) / CLOCKS_PER_SEC;
         printf("Time taken to execute was %f\n", time_spent);
     }
-    
 }
